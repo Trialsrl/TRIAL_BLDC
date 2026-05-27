@@ -183,7 +183,8 @@
   </div>
 
   <div class="hint" id="hint">
-    Premi <b>Connetti</b> e scegli <b>BLDC-CTRL</b> dalla lista. I valori in sola lettura si aggiornano da soli;
+    Premi <b>Connetti</b>: comparirà la lista dei dispositivi BLE vicini. Scegli <b>BLDC-CTRL</b>
+    (se il nome non appare, cerca il dispositivo per indirizzo MAC). I valori in sola lettura si aggiornano da soli;
     per i parametri scrivibili usa i controlli a destra. I valori scalati (V, °C…) mostrano il dato interpretato:
     in scrittura si inserisce il <b>valore intero del registro</b> (es. Vh 5.0V → 50).
   </div>
@@ -351,8 +352,11 @@ async function connect(){
   if(!navigator.bluetooth){ $("#unsupported").style.display="block"; return; }
   try{
     log("Ricerca dispositivo…");
+    // acceptAllDevices: mostra TUTTI i dispositivi BLE vicini e lasci
+    // scegliere te. Più affidabile del filtro per nome, che funziona solo
+    // se il nome è nel pacchetto di advertising (non sempre garantito).
     device = await navigator.bluetooth.requestDevice({
-      filters:[{name:DEV_NAME}],
+      acceptAllDevices:true,
       optionalServices:[SVC]
     });
     device.addEventListener("gattserverdisconnected", onDisconnect);
