@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0e12">
+<title>BLDC-CTRL · Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e12; --panel:#10161d; --panel2:#0d1318; --line:#1d2730;
+    --line2:#2a3742; --txt:#cdd9e0; --dim:#5f7382; --dimmer:#3d4d59;
+    --cyan:#2dd4bf; --cyan-d:#0f766e; --amber:#f5a623; --amber-d:#5a4413;
+    --red:#ef4444; --green:#22c55e; --ro:#7a8fa0;
+    --shadow:0 10px 40px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg);color:var(--txt);font-family:'Chakra Petch',sans-serif}
+  body{
+    min-height:100vh;
+    background-image:
+      radial-gradient(1200px 600px at 80% -10%, rgba(45,212,191,.06), transparent 60%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px);
+    padding-bottom:120px;
+  }
+  .mono{font-family:'JetBrains Mono',monospace}
+
+  /* ---- Top bar ---- */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:linear-gradient(180deg, rgba(13,19,24,.97), rgba(13,19,24,.88));
+    border-bottom:1px solid var(--line2);
+    backdrop-filter:blur(8px);
+    padding:14px 16px;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:38px;height:38px;border-radius:9px;flex:none;
+    background:linear-gradient(135deg,#0f766e,#2dd4bf);
+    display:grid;place-items:center;font-weight:700;color:#06140f;
+    font-size:16px;letter-spacing:-1px;box-shadow:0 0 18px rgba(45,212,191,.35)}
+  .ttl{font-weight:700;font-size:18px;letter-spacing:.5px;line-height:1}
+  .sub{font-size:11px;color:var(--dim);letter-spacing:1.5px;margin-top:3px}
+  .bar-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
+  .status{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.5px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--dimmer);transition:.3s}
+  .dot.on{background:var(--green);box-shadow:0 0 10px var(--green)}
+  .dot.warn{background:var(--amber);box-shadow:0 0 10px var(--amber)}
+  .rx-blink{width:7px;height:7px;border-radius:50%;background:var(--dimmer);transition:.08s}
+  .rx-blink.flash{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+
+  button{
+    font-family:'Chakra Petch',sans-serif;cursor:pointer;border:none;
+    border-radius:8px;font-weight:600;letter-spacing:.5px;transition:.15s;color:#06140f}
+  button:active{transform:translateY(1px)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .btn-conn{background:linear-gradient(135deg,#0f766e,#2dd4bf);padding:11px 18px;font-size:14px}
+  .btn-conn.disconnect{background:linear-gradient(135deg,#7f1d1d,#ef4444);color:#fff}
+
+  main{max-width:760px;margin:0 auto;padding:16px}
+
+  /* ---- Quick panel ---- */
+  .quick{
+    background:var(--panel);border:1px solid var(--line2);border-radius:14px;
+    padding:18px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .quick h2{font-size:12px;letter-spacing:2px;color:var(--cyan);margin-bottom:16px;font-weight:600}
+  .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .qcell{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:13px}
+  .qcell.full{grid-column:1/-1}
+  .qlabel{font-size:11px;letter-spacing:1.5px;color:var(--dim);margin-bottom:9px}
+  .qval{font-size:26px;font-weight:700}
+  .qunit{font-size:13px;color:var(--dim);margin-left:4px}
+
+  /* big readouts */
+  .reado{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px}
+  .ro-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 15px}
+  .ro-card .qlabel{display:flex;justify-content:space-between}
+  .ro-card .v{font-size:24px;font-weight:700;margin-top:6px}
+
+  /* ---- toggle ---- */
+  .tg{position:relative;width:62px;height:32px;border-radius:20px;background:#202c35;
+    border:1px solid var(--line2);transition:.2s;flex:none}
+  .tg.on{background:linear-gradient(135deg,#0f766e,#2dd4bf)}
+  .tg::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;
+    background:#cdd9e0;transition:.2s}
+  .tg.on::after{left:32px;background:#06140f}
+  .tg-wrap{display:flex;align-items:center;justify-content:space-between}
+
+  /* slider */
+  input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:4px;
+    background:linear-gradient(90deg,var(--cyan) var(--p,0%),#202c35 var(--p,0%));margin-top:6px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+    background:var(--cyan);box-shadow:0 0 10px rgba(45,212,191,.5);cursor:pointer}
+
+  /* segmented (dir) */
+  .seg{display:flex;gap:4px;background:#1a242c;border-radius:9px;padding:4px;margin-top:6px}
+  .seg button{flex:1;background:transparent;color:var(--dim);padding:8px 0;font-size:13px;font-weight:600}
+  .seg button.sel{background:linear-gradient(135deg,#0f766e,#2dd4bf);color:#06140f}
+
+  /* ---- groups ---- */
+  .group{margin-bottom:14px;border:1px solid var(--line2);border-radius:12px;overflow:hidden;background:var(--panel)}
+  .ghead{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;
+    background:var(--panel2);user-select:none}
+  .ghead .gt{font-size:13px;letter-spacing:1.5px;font-weight:600}
+  .ghead .gt small{color:var(--dim);font-weight:400;letter-spacing:1px;margin-left:8px}
+  .chev{color:var(--dim);transition:.2s;font-size:13px}
+  .group.collapsed .gbody{display:none}
+  .group.collapsed .chev{transform:rotate(-90deg)}
+  .gbody{padding:6px 0}
+
+  .reg{display:grid;grid-template-columns:1fr auto;gap:10px 12px;align-items:center;
+    padding:11px 16px;border-top:1px solid var(--line)}
+  .reg:first-child{border-top:none}
+  .rname{font-size:14px;font-weight:500;display:flex;flex-direction:column;gap:3px}
+  .rname .meta{font-size:10px;color:var(--dimmer);letter-spacing:1px;display:flex;gap:7px;align-items:center}
+  .rname .idx{color:var(--cyan-d);font-weight:600;font-family:'JetBrains Mono',monospace}
+  .tag{font-size:9px;padding:1px 6px;border-radius:4px;letter-spacing:1px;font-weight:600}
+  .tag.ro{background:var(--amber-d);color:var(--amber)}
+  .tag.rw{background:#0c3b35;color:var(--cyan)}
+  .tag.ee{background:#1a2733;color:var(--dim)}
+  .rval{text-align:right}
+  .cur{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace}
+  .cur small{font-size:11px;color:var(--dim);font-weight:400}
+  .roval{color:var(--ro)}
+
+  .ctl{display:flex;gap:7px;align-items:center;justify-content:flex-end;margin-top:7px}
+  .ctl input[type=number]{
+    width:92px;background:#0a1015;border:1px solid var(--line2);color:var(--txt);
+    border-radius:7px;padding:8px 9px;font-family:'JetBrains Mono',monospace;font-size:14px;text-align:right}
+  .ctl select{
+    background:#0a1015;border:1px solid var(--line2);color:var(--txt);border-radius:7px;
+    padding:8px 9px;font-family:'Chakra Petch',sans-serif;font-size:13px;min-width:120px}
+  .ctl .set{background:#1a2733;color:var(--cyan);border:1px solid var(--cyan-d);padding:8px 12px;font-size:12px}
+  .ctl .set:active{background:var(--cyan);color:#06140f}
+  input:focus,select:focus{outline:none;border-color:var(--cyan)}
+
+  /* raw tool + log */
+  .tool{background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:16px;margin-bottom:14px}
+  .tool h2{font-size:12px;letter-spacing:2px;color:var(--cyan);margin-bottom:13px;font-weight:600}
+  .tool .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .tool input{background:#0a1015;border:1px solid var(--line2);color:var(--txt);border-radius:7px;
+    padding:9px;font-family:'JetBrains Mono',monospace;font-size:14px;width:110px}
+  .tool .set{background:linear-gradient(135deg,#0f766e,#2dd4bf);padding:10px 16px;font-size:13px}
+  #log{font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:var(--dim);
+    max-height:140px;overflow-y:auto;margin-top:12px;background:#070b0e;border-radius:8px;padding:10px 12px;
+    border:1px solid var(--line)}
+  #log .s{color:var(--cyan)} #log .r{color:var(--green)} #log .e{color:var(--red)} #log .i{color:var(--dim)}
+
+  .hint{font-size:12px;color:var(--dim);line-height:1.6;padding:14px 16px;background:var(--panel2);
+    border:1px dashed var(--line2);border-radius:10px;margin-bottom:16px}
+  .hint b{color:var(--amber)}
+  .footer{text-align:center;color:var(--dimmer);font-size:11px;letter-spacing:1px;padding:24px 0 8px}
+  .unsupported{display:none;background:#2a1010;border:1px solid var(--red);color:#fca5a5;
+    padding:14px;border-radius:10px;margin-bottom:16px;font-size:13px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">BL</div>
+    <div>
+      <div class="ttl">BLDC-CTRL</div>
+      <div class="sub">BLE REGISTER CONSOLE</div>
+    </div>
+  </div>
+  <div class="bar-row">
+    <div class="status">
+      <span class="dot" id="dot"></span>
+      <span id="statusTxt">Disconnesso</span>
+      <span class="rx-blink" id="rxBlink" title="Attività dati"></span>
+    </div>
+    <button class="btn-conn" id="btnConn">Connetti</button>
+  </div>
+</header>
+
+<main>
+  <div class="unsupported" id="unsupported">
+    ⚠ Questo browser non supporta Web Bluetooth. Apri questa pagina con <b>Google Chrome su Android</b>
+    (o Chrome/Edge su desktop). Safari e Firefox non sono supportati.
+  </div>
+
+  <div class="hint" id="hint">
+    Premi <b>Connetti</b> e scegli <b>BLDC-CTRL</b> dalla lista. I valori in sola lettura si aggiornano da soli;
+    per i parametri scrivibili usa i controlli a destra. I valori scalati (V, °C…) mostrano il dato interpretato:
+    in scrittura si inserisce il <b>valore intero del registro</b> (es. Vh 5.0V → 50).
+  </div>
+
+  <!-- QUICK CONTROL -->
+  <section class="quick" id="quick">
+    <h2>CONTROLLO RAPIDO</h2>
+    <div class="qgrid">
+      <div class="qcell">
+        <div class="tg-wrap">
+          <div class="qlabel" style="margin:0">RUN / STOP</div>
+          <div class="tg" id="tgRun" data-reg="1"></div>
+        </div>
+      </div>
+      <div class="qcell">
+        <div class="tg-wrap">
+          <div class="qlabel" style="margin:0">PWR</div>
+          <div class="tg" id="tgPwr" data-reg="0"></div>
+        </div>
+      </div>
+      <div class="qcell full">
+        <div class="qlabel">DIREZIONE</div>
+        <div class="seg" id="segDir">
+          <button data-v="0">Low / FW</button>
+          <button data-v="1">Hi / RW</button>
+          <button data-v="2">HiZ</button>
+        </div>
+      </div>
+      <div class="qcell full">
+        <div class="qlabel">VELOCITÀ (SPD) · <span class="mono" id="spdVal">0</span> / 1000</div>
+        <input type="range" id="spd" min="0" max="1000" value="0" data-reg="3">
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE READOUTS -->
+  <div class="reado" id="readouts"></div>
+
+  <!-- FULL REGISTER GROUPS -->
+  <div id="groups"></div>
+
+  <!-- RAW TOOL -->
+  <div class="tool">
+    <h2>SCRITTURA REGISTRO GREZZA</h2>
+    <div class="row">
+      <input type="number" id="rawReg" placeholder="reg #" min="0" max="43">
+      <input type="number" id="rawVal" placeholder="valore" min="0" max="65535">
+      <button class="set" id="rawSet">Invia</button>
+    </div>
+    <div id="log"></div>
+  </div>
+
+  <div class="footer">BLDC-CTRL · Web Bluetooth Console · v1</div>
+</main>
+
+<script>
+"use strict";
+/* ============================================================
+   PROTOCOLLO (deve combaciare col firmware ESP32-C6)
+   - Servizio Nordic UART (NUS)
+   - TX (notify):  88 byte = 44 registri uint16 big-endian
+   - RX (write) :  4 byte = [reg_hi, reg_lo, val_hi, val_lo]
+   ============================================================ */
+const SVC = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+const TX  = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"; // notify -> app
+const RX  = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; // write  <- app
+const DEV_NAME = "BLDC-CTRL";
+const N_REGS = 44;
+
+/* ---- enum di decodifica ---- */
+const E_BOOL   = {0:"OFF",1:"ON"};
+const E_DIR    = {0:"Low (FW)",1:"Hi (RW)",2:"HiZ"};
+const E_SPDTYP = {0:"PWM",1:"ANALOG"};
+const E_AUTOMAN= {0:"MAN",1:"AUTO"};
+const E_UM     = {0:"DEG",1:"RAD",2:"PCT"};
+const E_OPMODE = {0:"BLDC",1:"DIGITAL",2:"BRIDGE",3:"PROGRAMMER"};
+const E_STOP   = {0:"OFF",1:"STB"};
+const E_MSTMODE= {0:"OFF",1:"SEND MEAS",2:"BRIDGE"};
+const E_BAUD   = {0:"9600",1:"19200",2:"38400",3:"57600",4:"115200"};
+const E_FRAME  = {0:"8N1",1:"8E1",2:"8O1"};
+
+/* ---- mappa registri ----
+   acc: RO/RW · ee: salvato in EEPROM · ctl: tipo controllo scrittura
+   div: divisore per il valore mostrato · u: unità · en: enum di decodifica */
+const REGS = [
+ {i:0, n:"PWR",            acc:"RW", grp:"OP", ctl:"bool", en:E_BOOL},
+ {i:1, n:"RUN / STOP",     acc:"RW", grp:"OP", ctl:"bool", en:E_BOOL},
+ {i:2, n:"DIR",            acc:"RW", grp:"OP", ctl:"enum", en:E_DIR},
+ {i:3, n:"SPD",            acc:"RW", grp:"OP", ctl:"num", min:0, max:1000},
+ {i:4, n:"AUTO / MAN",     acc:"RO", grp:"DATA", en:E_AUTOMAN},
+ {i:5, n:"Vbus",           acc:"RO", grp:"DATA", div:100, u:"V"},
+ {i:6, n:"Corrente",       acc:"RO", grp:"DATA", u:"mA"},
+ {i:7, n:"Potenza",        acc:"RO", grp:"DATA", div:10, u:"W"},
+ {i:8, n:"Temperatura",    acc:"RO", grp:"DATA", div:10, u:"°C"},
+ {i:9, n:"RPM",            acc:"RO", grp:"DATA", u:"rpm"},
+ {i:10,n:"PPM",            acc:"RO", grp:"DATA", u:"ppm"},
+ {i:11,n:"AUX ADC",        acc:"RO", grp:"DATA"},
+ {i:12,n:"AUX VAL",        acc:"RO", grp:"DATA"},
+ {i:13,n:"PAN_POT ADC",    acc:"RO", grp:"DATA"},
+ {i:14,n:"PAN_DIR ADC",    acc:"RO", grp:"DATA"},
+ {i:15,n:"SPDTYP",         acc:"RW", grp:"MOTOR", ee:1, ctl:"enum", en:E_SPDTYP},
+ {i:16,n:"Vh",             acc:"RW", grp:"MOTOR", ee:1, ctl:"num", div:10, u:"V", min:0, max:1000},
+ {i:17,n:"KHz",            acc:"RW", grp:"MOTOR", ee:1, ctl:"num", div:10, u:"kHz", min:1, max:9999},
+ {i:18,n:"PPR",            acc:"RW", grp:"MOTOR", ee:1, ctl:"num", min:1, max:9999},
+ {i:19,n:"Filtro tacho",   acc:"RW", grp:"MOTOR", ee:1, ctl:"num", min:0, max:9999},
+ {i:20,n:"AUX_UM",         acc:"RW", grp:"MOTOR", ee:1, ctl:"enum", en:E_UM},
+ {i:21,n:"AUX_Min",        acc:"RW", grp:"MOTOR", ee:1, ctl:"num", min:0, max:9999},
+ {i:22,n:"AUX_Max",        acc:"RW", grp:"MOTOR", ee:1, ctl:"num", min:0, max:9999},
+ {i:23,n:"OP Mode",        acc:"RW", grp:"SYS", ee:1, ctl:"enum", en:E_OPMODE},
+ {i:24,n:"STOP MODE",      acc:"RW", grp:"SYS", ee:1, ctl:"enum", en:E_STOP},
+ {i:25,n:"BLE",            acc:"RW", grp:"SYS", ee:1, ctl:"bool", en:E_BOOL},
+ {i:26,n:"MB Slave ID",    acc:"RW", grp:"SYS", ee:1, ctl:"num", min:1, max:247},
+ {i:27,n:"MB Slave Baud",  acc:"RW", grp:"SYS", ee:1, ctl:"enum", en:E_BAUD},
+ {i:28,n:"MB Slave Frame", acc:"RW", grp:"SYS", ee:1, ctl:"enum", en:E_FRAME},
+ {i:29,n:"MB Master Baud", acc:"RW", grp:"SYS", ee:1, ctl:"enum", en:E_BAUD},
+ {i:30,n:"MB Master Frame",acc:"RW", grp:"SYS", ee:1, ctl:"enum", en:E_FRAME},
+ {i:31,n:"MB Master Mode", acc:"RW", grp:"SYS", ee:1, ctl:"enum", en:E_MSTMODE},
+ {i:32,n:"SM1 SlvID",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:247},
+ {i:33,n:"SM1 SlREG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:65535},
+ {i:34,n:"SM1 M_REG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:43},
+ {i:35,n:"SM2 SlvID",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:247},
+ {i:36,n:"SM2 SlREG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:65535},
+ {i:37,n:"SM2 M_REG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:43},
+ {i:38,n:"SM3 SlvID",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:247},
+ {i:39,n:"SM3 SlREG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:65535},
+ {i:40,n:"SM3 M_REG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:43},
+ {i:41,n:"SM4 SlvID",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:247},
+ {i:42,n:"SM4 SlREG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:65535},
+ {i:43,n:"SM4 M_REG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:43},
+];
+const GROUPS = [
+ {k:"OP",   t:"OPERATION", s:"comandi runtime"},
+ {k:"DATA", t:"DATA (sola lettura)", s:"misure live"},
+ {k:"MOTOR",t:"MOTOR SET", s:"EEPROM"},
+ {k:"SYS",  t:"SYSTEM", s:"EEPROM"},
+];
+// readout grandi (i piu' utili da tenere d'occhio)
+const READOUTS = [5,6,7,8,9];
+
+/* ============================================================
+   Stato BLE
+   ============================================================ */
+let device=null, server=null, rxChar=null, txChar=null;
+let values = new Array(N_REGS).fill(0);
+let connected=false;
+
+const $ = s=>document.querySelector(s);
+const dot=$("#dot"), statusTxt=$("#statusTxt"), btnConn=$("#btnConn"), rxBlink=$("#rxBlink");
+
+function log(msg,cls="i"){
+  const el=$("#log"); const t=new Date().toLocaleTimeString();
+  el.innerHTML += `<div class="${cls}">[${t}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+function fmt(reg, raw){
+  if(reg.en) return reg.en[raw] ?? raw;
+  if(reg.div) return (raw/reg.div).toFixed(reg.div>=100?2:1);
+  return String(raw);
+}
+
+/* ============================================================
+   Connessione
+   ============================================================ */
+async function connect(){
+  if(!navigator.bluetooth){ $("#unsupported").style.display="block"; return; }
+  try{
+    log("Ricerca dispositivo…");
+    device = await navigator.bluetooth.requestDevice({
+      filters:[{name:DEV_NAME}],
+      optionalServices:[SVC]
+    });
+    device.addEventListener("gattserverdisconnected", onDisconnect);
+    setStatus("warn","Connessione…");
+    server = await device.gatt.connect();
+    const svc = await server.getPrimaryService(SVC);
+    txChar = await svc.getCharacteristic(TX);
+    rxChar = await svc.getCharacteristic(RX);
+    await txChar.startNotifications();
+    txChar.addEventListener("characteristicvaluechanged", onNotify);
+    connected=true;
+    setStatus("on","Connesso");
+    btnConn.textContent="Disconnetti"; btnConn.classList.add("disconnect");
+    setControlsEnabled(true);
+    log("Connesso a "+device.name, "r");
+  }catch(err){
+    log("Errore: "+err.message, "e");
+    setStatus("","Disconnesso");
+  }
+}
+function disconnect(){ if(device && device.gatt.connected) device.gatt.disconnect(); }
+function onDisconnect(){
+  connected=false; setStatus("","Disconnesso");
+  btnConn.textContent="Connetti"; btnConn.classList.remove("disconnect");
+  setControlsEnabled(false);
+  log("Disconnesso","e");
+}
+function setStatus(cls,txt){ dot.className="dot "+(cls||""); statusTxt.textContent=txt; }
+
+/* ---- ricezione notifica (88 byte) ---- */
+function onNotify(e){
+  const dv = e.target.value;
+  const n = Math.min(N_REGS, Math.floor(dv.byteLength/2));
+  for(let i=0;i<n;i++) values[i] = dv.getUint16(i*2, false); // big-endian
+  if(dv.byteLength < N_REGS*2){
+    setStatus("warn", `Connesso · pacchetto ${dv.byteLength}B/${N_REGS*2}B (MTU basso)`);
+  }
+  rxBlink.classList.add("flash"); setTimeout(()=>rxBlink.classList.remove("flash"),80);
+  refreshUI();
+}
+
+/* ---- scrittura registro ---- */
+async function writeReg(reg,val){
+  if(!connected || !rxChar){ log("Non connesso","e"); return; }
+  val = Math.max(0, Math.min(65535, val|0));
+  const buf = new Uint8Array([ (reg>>8)&0xFF, reg&0xFF, (val>>8)&0xFF, val&0xFF ]);
+  try{
+    if(rxChar.writeValueWithoutResponse) await rxChar.writeValueWithoutResponse(buf);
+    else await rxChar.writeValue(buf);
+    log(`→ reg[${reg}] = ${val}`, "s");
+  }catch(err){ log("Errore scrittura: "+err.message,"e"); }
+}
+
+/* ============================================================
+   Costruzione UI
+   ============================================================ */
+function buildReadouts(){
+  const c=$("#readouts"); c.innerHTML="";
+  READOUTS.forEach(i=>{
+    const r=REGS[i];
+    c.insertAdjacentHTML("beforeend",
+     `<div class="ro-card"><div class="qlabel">${r.n}${r.u?` <span style="color:var(--dimmer)">${r.u}</span>`:""}</div>
+      <div class="v mono" id="rd${i}">–</div></div>`);
+  });
+}
+function buildGroups(){
+  const c=$("#groups"); c.innerHTML="";
+  GROUPS.forEach(g=>{
+    const regs=REGS.filter(r=>r.grp===g.k);
+    let rows="";
+    regs.forEach(r=>{
+      const tag = r.acc==="RO" ? `<span class="tag ro">RO</span>` : `<span class="tag rw">RW</span>`;
+      const ee  = r.ee ? `<span class="tag ee">EEPROM</span>` : "";
+      rows += `<div class="reg" data-reg="${r.i}">
+        <div class="rname">${r.n}
+          <span class="meta"><span class="idx">[${r.i}]</span>${tag}${ee}</span></div>
+        <div class="rval">
+          <div class="cur ${r.acc==='RO'?'roval':''}" id="cur${r.i}">–</div>
+          ${r.acc==="RW" ? ctlHTML(r) : ""}
+        </div></div>`;
+    });
+    c.insertAdjacentHTML("beforeend",
+     `<div class="group" data-grp="${g.k}">
+        <div class="ghead"><span class="gt">${g.t}<small>${g.s}</small></span><span class="chev">▾</span></div>
+        <div class="gbody">${rows}</div>
+      </div>`);
+  });
+  // toggle collapse
+  document.querySelectorAll(".ghead").forEach(h=>{
+    h.onclick=()=>h.parentElement.classList.toggle("collapsed");
+  });
+  // bind controlli RW
+  REGS.filter(r=>r.acc==="RW").forEach(bindCtl);
+}
+function ctlHTML(r){
+  if(r.ctl==="bool"){
+    return `<div class="ctl"><div class="tg" id="ctlb${r.i}" data-reg="${r.i}"></div></div>`;
+  }
+  if(r.ctl==="enum"){
+    let opts=""; for(const [k,v] of Object.entries(r.en)) opts+=`<option value="${k}">${k} · ${v}</option>`;
+    return `<div class="ctl"><select id="ctls${r.i}">${opts}</select></div>`;
+  }
+  // num
+  return `<div class="ctl">
+     <input type="number" id="ctln${r.i}" min="${r.min??0}" max="${r.max??65535}" placeholder="${r.min??0}–${r.max??65535}">
+     <button class="set" id="ctlset${r.i}">SET</button></div>`;
+}
+function bindCtl(r){
+  if(r.ctl==="bool"){
+    const t=$("#ctlb"+r.i); if(t) t.onclick=()=>writeReg(r.i, values[r.i]?0:1);
+  }else if(r.ctl==="enum"){
+    const s=$("#ctls"+r.i); if(s) s.onchange=()=>writeReg(r.i, parseInt(s.value,10));
+  }else{
+    const b=$("#ctlset"+r.i), inp=$("#ctln"+r.i);
+    if(b) b.onclick=()=>{ const v=parseInt(inp.value,10); if(!isNaN(v)){ writeReg(r.i,v); inp.value=""; } };
+  }
+}
+
+/* ---- aggiorna i valori a video (chiamato a ogni notifica) ---- */
+function refreshUI(){
+  REGS.forEach(r=>{
+    const cur=$("#cur"+r.i);
+    if(cur){ const u=r.u?` <small>${r.u}</small>`:""; cur.innerHTML=fmt(r,values[r.i])+u; }
+  });
+  READOUTS.forEach(i=>{ const el=$("#rd"+i); if(el) el.textContent=fmt(REGS[i],values[i]); });
+  // quick panel (non sovrascrive mentre l'utente trascina lo slider)
+  setTg($("#tgPwr"), values[0]);
+  setTg($("#tgRun"), values[1]);
+  document.querySelectorAll("#segDir button").forEach(b=>b.classList.toggle("sel", +b.dataset.v===values[2]));
+  if(!spdDragging){ const s=$("#spd"); s.value=values[3]; $("#spdVal").textContent=values[3]; setRange(s); }
+  // sincronizza enum/bool nei gruppi col valore reale
+  REGS.filter(r=>r.acc==="RW").forEach(r=>{
+    if(r.ctl==="bool"){ setTg($("#ctlb"+r.i), values[r.i]); }
+    else if(r.ctl==="enum"){ const s=$("#ctls"+r.i); if(s && document.activeElement!==s) s.value=values[r.i]; }
+  });
+}
+function setTg(el,on){ if(el) el.classList.toggle("on", !!on); }
+function setRange(s){ s.style.setProperty("--p",(s.value/s.max*100)+"%"); }
+
+/* ---- quick controls ---- */
+let spdDragging=false;
+function initQuick(){
+  $("#tgPwr").onclick=()=>writeReg(0, values[0]?0:1);
+  $("#tgRun").onclick=()=>writeReg(1, values[1]?0:1);
+  document.querySelectorAll("#segDir button").forEach(b=>{
+    b.onclick=()=>writeReg(2, +b.dataset.v);
+  });
+  const s=$("#spd");
+  s.addEventListener("input",()=>{ spdDragging=true; $("#spdVal").textContent=s.value; setRange(s); });
+  s.addEventListener("change",()=>{ writeReg(3, +s.value); spdDragging=false; });
+}
+
+/* ---- raw tool ---- */
+function initRaw(){
+  $("#rawSet").onclick=()=>{
+    const reg=parseInt($("#rawReg").value,10), val=parseInt($("#rawVal").value,10);
+    if(isNaN(reg)||isNaN(val)){ log("Reg/valore non validi","e"); return; }
+    if(reg<0||reg>=N_REGS){ log("Indice fuori range (0–"+(N_REGS-1)+")","e"); return; }
+    writeReg(reg,val);
+  };
+}
+
+function setControlsEnabled(on){
+  document.querySelectorAll("input,select,#segDir button,.tg").forEach(el=>{
+    if(el.id==="rawReg"||el.id==="rawVal") return; // raw input sempre editabile
+    el.style.pointerEvents = on?"auto":"none";
+    el.style.opacity = on?"1":".5";
+  });
+  $("#rawSet").disabled=!on;
+}
+
+/* ---- init ---- */
+btnConn.onclick=()=> connected ? disconnect() : connect();
+buildReadouts(); buildGroups(); initQuick(); initRaw();
+setControlsEnabled(false);
+if(!navigator.bluetooth) $("#unsupported").style.display="block";
+log("Pronto. Premi Connetti.");
+</script>
+</body>
+</html>
