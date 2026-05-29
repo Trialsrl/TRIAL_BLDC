@@ -10,11 +10,37 @@
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
+    /* Tema DARK (default) */
     --bg:#0a0e12; --panel:#10161d; --panel2:#0d1318; --line:#1d2730;
-    --line2:#2a3742; --txt:#cdd9e0; --dim:#5f7382; --dimmer:#3d4d59;
+    --line2:#2a3742; --txt:#e6eef3; --dim:#94a8b8; --dimmer:#5d6f7e;
     --cyan:#2dd4bf; --cyan-d:#0f766e; --amber:#f5a623; --amber-d:#5a4413;
-    --red:#ef4444; --green:#22c55e; --ro:#7a8fa0;
+    --red:#ef4444; --green:#22c55e; --ro:#94a8b8;
+    --input-bg:#0a1015; --tag-rw-bg:#0c3b35; --tag-ro-bg:#5a4413;
+    --tag-ee-bg:#1a2733; --tag-ee-fg:#94a8b8; --tag-ro-fg:#f5a623;
     --shadow:0 10px 40px rgba(0,0,0,.5);
+    --logo-fg:#06140f;
+  }
+  /* Tema LIGHT (chiaro) */
+  [data-theme="light"]{
+    --bg:#f4f7fa; --panel:#ffffff; --panel2:#eef3f7; --line:#e1e8ee;
+    --line2:#c9d4dd; --txt:#1a2530; --dim:#5a6b7a; --dimmer:#8a9aa8;
+    --cyan:#0d9488; --cyan-d:#0f766e; --amber:#b45309; --amber-d:#fdebc8;
+    --red:#dc2626; --green:#15803d; --ro:#5a6b7a;
+    --input-bg:#ffffff; --tag-rw-bg:#d1faf3; --tag-ro-bg:#fdebc8;
+    --tag-ee-bg:#e1e8ee; --tag-ee-fg:#5a6b7a; --tag-ro-fg:#b45309;
+    --shadow:0 8px 30px rgba(40,60,80,.10);
+    --logo-fg:#ffffff;
+  }
+  /* Tema SLATE (intermedio, blu-grigio meno scuro) */
+  [data-theme="slate"]{
+    --bg:#1e2a36; --panel:#27384a; --panel2:#223040; --line:#33485d;
+    --line2:#445b71; --txt:#eef4f9; --dim:#a8bccd; --dimmer:#6d8499;
+    --cyan:#5eead4; --cyan-d:#14b8a6; --amber:#fbbf24; --amber-d:#78531a;
+    --red:#f87171; --green:#4ade80; --ro:#a8bccd;
+    --input-bg:#1a2530; --tag-rw-bg:#134e4a; --tag-ro-bg:#78531a;
+    --tag-ee-bg:#33485d; --tag-ee-fg:#a8bccd; --tag-ro-fg:#fbbf24;
+    --shadow:0 10px 35px rgba(0,0,0,.4);
+    --logo-fg:#06140f;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{background:var(--bg);color:var(--txt);font-family:'Chakra Petch',sans-serif}
@@ -38,8 +64,8 @@
   .brand{display:flex;align-items:center;gap:12px}
   .logo{
     width:38px;height:38px;border-radius:9px;flex:none;
-    background:linear-gradient(135deg,#0f766e,#2dd4bf);
-    display:grid;place-items:center;font-weight:700;color:#06140f;
+    background:linear-gradient(135deg,var(--cyan-d),var(--cyan));
+    display:grid;place-items:center;font-weight:700;color:var(--logo-fg);
     font-size:16px;letter-spacing:-1px;box-shadow:0 0 18px rgba(45,212,191,.35)}
   .ttl{font-weight:700;font-size:18px;letter-spacing:.5px;line-height:1}
   .sub{font-size:11px;color:var(--dim);letter-spacing:1.5px;margin-top:3px}
@@ -56,7 +82,7 @@
     border-radius:8px;font-weight:600;letter-spacing:.5px;transition:.15s;color:#06140f}
   button:active{transform:translateY(1px)}
   button:disabled{opacity:.4;cursor:not-allowed}
-  .btn-conn{background:linear-gradient(135deg,#0f766e,#2dd4bf);padding:11px 18px;font-size:14px}
+  .btn-conn{background:linear-gradient(135deg,var(--cyan-d),var(--cyan));color:var(--logo-fg);padding:11px 18px;font-size:14px}
   .btn-conn.disconnect{background:linear-gradient(135deg,#7f1d1d,#ef4444);color:#fff}
 
   main{max-width:760px;margin:0 auto;padding:16px}
@@ -65,39 +91,40 @@
   .quick{
     background:var(--panel);border:1px solid var(--line2);border-radius:14px;
     padding:18px;margin-bottom:18px;box-shadow:var(--shadow)}
-  .quick h2{font-size:12px;letter-spacing:2px;color:var(--cyan);margin-bottom:16px;font-weight:600}
+  .quick h2{font-size:13px;letter-spacing:2px;color:var(--cyan);margin-bottom:16px;font-weight:700}
   .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .qcell{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:13px}
   .qcell.full{grid-column:1/-1}
-  .qlabel{font-size:11px;letter-spacing:1.5px;color:var(--dim);margin-bottom:9px}
+  .qlabel{font-size:12px;letter-spacing:1.5px;color:var(--txt);margin-bottom:9px;font-weight:600;opacity:.85}
   .qval{font-size:26px;font-weight:700}
-  .qunit{font-size:13px;color:var(--dim);margin-left:4px}
+  .qunit{font-size:14px;color:var(--dim);margin-left:4px;font-weight:500}
 
   /* big readouts */
   .reado{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px}
   .ro-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 15px}
-  .ro-card .qlabel{display:flex;justify-content:space-between}
+  .ro-card .qlabel{display:flex;justify-content:space-between;font-weight:700;color:var(--txt);opacity:.9}
+  .ro-card .qlabel span{color:var(--cyan);font-weight:700}
   .ro-card .v{font-size:24px;font-weight:700;margin-top:6px}
 
   /* ---- toggle ---- */
-  .tg{position:relative;width:62px;height:32px;border-radius:20px;background:#202c35;
+  .tg{position:relative;width:62px;height:32px;border-radius:20px;background:var(--panel2);
     border:1px solid var(--line2);transition:.2s;flex:none}
   .tg.on{background:linear-gradient(135deg,#0f766e,#2dd4bf)}
   .tg::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;
-    background:#cdd9e0;transition:.2s}
-  .tg.on::after{left:32px;background:#06140f}
+    background:var(--txt);transition:.2s}
+  .tg.on::after{left:32px;background:var(--logo-fg)}
   .tg-wrap{display:flex;align-items:center;justify-content:space-between}
 
   /* slider */
   input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:4px;
-    background:linear-gradient(90deg,var(--cyan) var(--p,0%),#202c35 var(--p,0%));margin-top:6px}
+    background:linear-gradient(90deg,var(--cyan) var(--p,0%),var(--panel2) var(--p,0%));margin-top:6px}
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;
     background:var(--cyan);box-shadow:0 0 10px rgba(45,212,191,.5);cursor:pointer}
 
   /* segmented (dir) */
-  .seg{display:flex;gap:4px;background:#1a242c;border-radius:9px;padding:4px;margin-top:6px}
+  .seg{display:flex;gap:4px;background:var(--panel2);border-radius:9px;padding:4px;margin-top:6px}
   .seg button{flex:1;background:transparent;color:var(--dim);padding:8px 0;font-size:13px;font-weight:600}
-  .seg button.sel{background:linear-gradient(135deg,#0f766e,#2dd4bf);color:#06140f}
+  .seg button.sel{background:linear-gradient(135deg,var(--cyan-d),var(--cyan));color:var(--logo-fg)}
 
   /* ---- groups ---- */
   .group{margin-bottom:14px;border:1px solid var(--line2);border-radius:12px;overflow:hidden;background:var(--panel)}
@@ -113,13 +140,13 @@
   .reg{display:grid;grid-template-columns:1fr auto;gap:10px 12px;align-items:center;
     padding:11px 16px;border-top:1px solid var(--line)}
   .reg:first-child{border-top:none}
-  .rname{font-size:14px;font-weight:500;display:flex;flex-direction:column;gap:3px}
-  .rname .meta{font-size:10px;color:var(--dimmer);letter-spacing:1px;display:flex;gap:7px;align-items:center}
-  .rname .idx{color:var(--cyan-d);font-weight:600;font-family:'JetBrains Mono',monospace}
-  .tag{font-size:9px;padding:1px 6px;border-radius:4px;letter-spacing:1px;font-weight:600}
-  .tag.ro{background:var(--amber-d);color:var(--amber)}
-  .tag.rw{background:#0c3b35;color:var(--cyan)}
-  .tag.ee{background:#1a2733;color:var(--dim)}
+  .rname{font-size:14.5px;font-weight:600;display:flex;flex-direction:column;gap:3px;color:var(--txt)}
+  .rname .meta{font-size:10.5px;color:var(--dim);letter-spacing:1px;display:flex;gap:7px;align-items:center;font-weight:500}
+  .rname .idx{color:var(--cyan);font-weight:700;font-family:'JetBrains Mono',monospace}
+  .tag{font-size:10px;padding:2px 7px;border-radius:5px;letter-spacing:1px;font-weight:700}
+  .tag.ro{background:var(--tag-ro-bg);color:var(--tag-ro-fg)}
+  .tag.rw{background:var(--tag-rw-bg);color:var(--cyan)}
+  .tag.ee{background:var(--tag-ee-bg);color:var(--tag-ee-fg)}
   .rval{text-align:right}
   .cur{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace}
   .cur small{font-size:11px;color:var(--dim);font-weight:400}
@@ -127,32 +154,48 @@
 
   .ctl{display:flex;gap:7px;align-items:center;justify-content:flex-end;margin-top:7px}
   .ctl input[type=number]{
-    width:92px;background:#0a1015;border:1px solid var(--line2);color:var(--txt);
+    width:92px;background:var(--input-bg);border:1px solid var(--line2);color:var(--txt);
     border-radius:7px;padding:8px 9px;font-family:'JetBrains Mono',monospace;font-size:14px;text-align:right}
   .ctl select{
-    background:#0a1015;border:1px solid var(--line2);color:var(--txt);border-radius:7px;
+    background:var(--input-bg);border:1px solid var(--line2);color:var(--txt);border-radius:7px;
     padding:8px 9px;font-family:'Chakra Petch',sans-serif;font-size:13px;min-width:120px}
-  .ctl .set{background:#1a2733;color:var(--cyan);border:1px solid var(--cyan-d);padding:8px 12px;font-size:12px}
-  .ctl .set:active{background:var(--cyan);color:#06140f}
+  .ctl .set{background:var(--tag-ee-bg);color:var(--cyan);border:1px solid var(--cyan-d);padding:8px 12px;font-size:12px}
+  .ctl .set:active{background:var(--cyan);color:var(--logo-fg)}
   input:focus,select:focus{outline:none;border-color:var(--cyan)}
 
   /* raw tool + log */
   .tool{background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:16px;margin-bottom:14px}
-  .tool h2{font-size:12px;letter-spacing:2px;color:var(--cyan);margin-bottom:13px;font-weight:600}
+  .tool h2{font-size:13px;letter-spacing:2px;color:var(--cyan);margin-bottom:13px;font-weight:700}
   .tool .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .tool input{background:#0a1015;border:1px solid var(--line2);color:var(--txt);border-radius:7px;
+  .tool input{background:var(--input-bg);border:1px solid var(--line2);color:var(--txt);border-radius:7px;
     padding:9px;font-family:'JetBrains Mono',monospace;font-size:14px;width:110px}
-  .tool .set{background:linear-gradient(135deg,#0f766e,#2dd4bf);padding:10px 16px;font-size:13px}
-  #log{font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:var(--dim);
-    max-height:140px;overflow-y:auto;margin-top:12px;background:#070b0e;border-radius:8px;padding:10px 12px;
-    border:1px solid var(--line)}
+  .tool .set{background:linear-gradient(135deg,var(--cyan-d),var(--cyan));padding:10px 16px;font-size:13px;color:var(--logo-fg)}
+  #log{font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.7;color:var(--txt);
+    max-height:140px;overflow-y:auto;margin-top:12px;background:var(--input-bg);border-radius:8px;padding:10px 12px;
+    border:1px solid var(--line);opacity:.85}
   #log .s{color:var(--cyan)} #log .r{color:var(--green)} #log .e{color:var(--red)} #log .i{color:var(--dim)}
 
-  .hint{font-size:12px;color:var(--dim);line-height:1.6;padding:14px 16px;background:var(--panel2);
-    border:1px dashed var(--line2);border-radius:10px;margin-bottom:16px}
+  .hint{font-size:13px;color:var(--txt);line-height:1.6;padding:14px 16px;background:var(--panel2);
+    border:1px dashed var(--line2);border-radius:10px;margin-bottom:16px;opacity:.92}
   .hint b{color:var(--amber)}
+
+  /* ---- toolbar tema + BLE ID ---- */
+  .topbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:12px;
+    padding-top:12px;border-top:1px solid var(--line2)}
+  .topbar label{font-size:11.5px;letter-spacing:1.5px;color:var(--dim);font-weight:600;
+    text-transform:uppercase}
+  .topbar .group-ctl{display:flex;align-items:center;gap:8px}
+  .topbar select, .topbar input[type=number]{
+    background:var(--input-bg);border:1px solid var(--line2);color:var(--txt);
+    border-radius:7px;padding:7px 10px;font-family:'Chakra Petch',sans-serif;font-size:14px;
+    font-weight:600;min-width:90px}
+  .topbar input[type=number]{width:88px;font-family:'JetBrains Mono',monospace;text-align:center}
+  .topbar select:focus, .topbar input:focus{outline:none;border-color:var(--cyan)}
+  .topbar .name-preview{font-family:'JetBrains Mono',monospace;font-size:12.5px;
+    color:var(--cyan);font-weight:600;padding:4px 10px;background:var(--input-bg);
+    border:1px solid var(--line);border-radius:6px}
   .footer{text-align:center;color:var(--dimmer);font-size:11px;letter-spacing:1px;padding:24px 0 8px}
-  .unsupported{display:none;background:#2a1010;border:1px solid var(--red);color:#fca5a5;
+  .unsupported{display:none;background:var(--tag-ro-bg);border:1px solid var(--red);color:#fca5a5;
     padding:14px;border-radius:10px;margin-bottom:16px;font-size:13px;line-height:1.6}
 </style>
 </head>
@@ -174,6 +217,21 @@
     </div>
     <button class="btn-conn" id="btnConn">Connetti</button>
   </div>
+  <div class="topbar">
+    <div class="group-ctl">
+      <label>Tema</label>
+      <select id="theme">
+        <option value="dark">Dark</option>
+        <option value="slate">Slate</option>
+        <option value="light">Light</option>
+      </select>
+    </div>
+    <div class="group-ctl">
+      <label>BLE&nbsp;ID</label>
+      <input type="number" id="bleId" min="1" max="255" value="1" inputmode="numeric">
+      <span class="name-preview" id="namePreview">BLDC-CTRL-1</span>
+    </div>
+  </div>
 </header>
 
 <main>
@@ -183,8 +241,9 @@
   </div>
 
   <div class="hint" id="hint">
-    Premi <b>Connetti</b>: comparirà la lista dei dispositivi BLE vicini. Scegli <b>BLDC-CTRL</b>
-    (se il nome non appare, cerca il dispositivo per indirizzo MAC). I valori in sola lettura si aggiornano da soli;
+    Imposta il <b>BLE ID</b> in alto (corrisponde al registro 25 della scheda) e premi <b>Connetti</b>:
+    l'app cercherà direttamente il dispositivo <code>BLDC-CTRL-&lt;id&gt;</code>. Puoi anche passare l'ID
+    via URL aggiungendo <code>?id=N</code>. I valori in sola lettura si aggiornano da soli;
     per i parametri scrivibili usa i controlli a destra. I valori scalati (V, °C…) mostrano il dato interpretato:
     in scrittura si inserisce il <b>valore intero del registro</b> (es. Vh 5.0V → 50).
   </div>
@@ -251,8 +310,32 @@
 const SVC = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const TX  = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"; // notify -> app
 const RX  = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; // write  <- app
-const DEV_NAME = "BLDC-CTRL";
+const DEV_PREFIX = "BLDC-CTRL";
 const N_REGS = 44;
+
+/* ---- localStorage sicuro: su file:// alcuni browser lanciano SecurityError.
+   Wrapper che fallisce silenziosamente: l'app funziona comunque, solo
+   senza persistenza fra sessioni (tema e BLE ID si reimpostano al reload). */
+function lsGet(k){
+  try { return localStorage.getItem(k); }
+  catch(e){ return null; }
+}
+function lsSet(k, v){
+  try { localStorage.setItem(k, v); }
+  catch(e){ /* file://: persistenza non disponibile, ignora */ }
+}
+
+/* ---- BLE ID: precedenza URL ?id=N > localStorage > default 1 ---- */
+function clampId(v){ v = parseInt(v,10); if(!Number.isFinite(v)) v=1; return Math.min(255, Math.max(1, v)); }
+function getInitialId(){
+  // location.search funziona anche con file:///.../index.html?id=3
+  const url = new URLSearchParams(location.search);
+  if(url.has("id")) return clampId(url.get("id"));
+  const ls = lsGet("bleId");
+  if(ls!=null)      return clampId(ls);
+  return 1;
+}
+function deviceName(id){ return DEV_PREFIX + "-" + clampId(id); }
 
 /* ---- enum di decodifica ---- */
 const E_BOOL   = {0:"OFF",1:"ON"};
@@ -350,13 +433,16 @@ function fmt(reg, raw){
    ============================================================ */
 async function connect(){
   if(!navigator.bluetooth){ $("#unsupported").style.display="block"; return; }
+  const id = clampId($("#bleId").value);
+  const name = deviceName(id);
   try{
-    log("Ricerca dispositivo…");
-    // acceptAllDevices: mostra TUTTI i dispositivi BLE vicini e lasci
-    // scegliere te. Più affidabile del filtro per nome, che funziona solo
-    // se il nome è nel pacchetto di advertising (non sempre garantito).
+    log("Ricerca "+name+"…");
+    // Filtro per nome esatto: l'app cerca direttamente "BLDC-CTRL-<id>".
+    // Richiede che il dispositivo trasmetta il nome nell'advertising
+    // (firmware: pAdv->setName(...) in bleInit). In caso di mismatch o
+    // filtri non supportati, l'utente può rilanciare la scelta.
     device = await navigator.bluetooth.requestDevice({
-      acceptAllDevices:true,
+      filters:[{name:name}],
       optionalServices:[SVC]
     });
     device.addEventListener("gattserverdisconnected", onDisconnect);
@@ -368,12 +454,15 @@ async function connect(){
     await txChar.startNotifications();
     txChar.addEventListener("characteristicvaluechanged", onNotify);
     connected=true;
-    setStatus("on","Connesso");
+    setStatus("on","Connesso · "+device.name);
     btnConn.textContent="Disconnetti"; btnConn.classList.add("disconnect");
     setControlsEnabled(true);
     log("Connesso a "+device.name, "r");
   }catch(err){
-    log("Errore: "+err.message, "e");
+    // Tipico: NotFoundError quando l'utente chiude il chooser o nessun
+    // dispositivo col nome richiesto è in advertising. Non è un crash:
+    // suggerisci di verificare il BLE ID.
+    log("Errore: "+err.message+" (verifica BLE ID e che la scheda sia accesa)", "e");
     setStatus("","Disconnesso");
   }
 }
@@ -528,7 +617,33 @@ function setControlsEnabled(on){
   $("#rawSet").disabled=!on;
 }
 
+/* ---- init topbar: tema + BLE ID ---- */
+function initTopbar(){
+  // Tema: localStorage > default 'dark'. Applico subito.
+  const themeSel = $("#theme");
+  const saved = lsGet("theme") || "dark";
+  document.documentElement.setAttribute("data-theme", saved);
+  themeSel.value = saved;
+  themeSel.onchange = ()=>{
+    document.documentElement.setAttribute("data-theme", themeSel.value);
+    lsSet("theme", themeSel.value);
+  };
+  // BLE ID
+  const inp = $("#bleId"), prev = $("#namePreview");
+  inp.value = getInitialId();
+  prev.textContent = deviceName(inp.value);
+  function syncId(){
+    const v = clampId(inp.value);
+    inp.value = v;
+    prev.textContent = deviceName(v);
+    lsSet("bleId", v);
+  }
+  inp.addEventListener("input", syncId);
+  inp.addEventListener("change", syncId);
+}
+
 /* ---- init ---- */
+initTopbar();
 btnConn.onclick=()=> connected ? disconnect() : connect();
 buildReadouts(); buildGroups(); initQuick(); initRaw();
 setControlsEnabled(false);
