@@ -195,6 +195,21 @@
     color:var(--cyan);font-weight:600;padding:4px 10px;background:var(--input-bg);
     border:1px solid var(--line);border-radius:6px}
   .footer{text-align:center;color:var(--dimmer);font-size:11px;letter-spacing:1px;padding:24px 0 8px}
+
+  /* ---- RE-BOOT button ---- */
+  .btn-reboot{
+    background:linear-gradient(135deg,#7f1d1d,#ef4444);
+    color:#fff;padding:11px 18px;font-size:13px;letter-spacing:1.5px;
+    border:1px solid #ef4444;border-radius:8px;
+    box-shadow:0 0 12px rgba(239,68,68,.3);
+    transition:.15s;
+  }
+  .btn-reboot:hover:not(:disabled){
+    background:linear-gradient(135deg,#991b1b,#f87171);
+    box-shadow:0 0 20px rgba(239,68,68,.5);
+  }
+  .btn-reboot:disabled{opacity:.3;cursor:not-allowed}
+
   .unsupported{display:none;background:var(--tag-ro-bg);border:1px solid var(--red);color:#fca5a5;
     padding:14px;border-radius:10px;margin-bottom:16px;font-size:13px;line-height:1.6}
 </style>
@@ -215,7 +230,10 @@
       <span id="statusTxt">Disconnesso</span>
       <span class="rx-blink" id="rxBlink" title="Attività dati"></span>
     </div>
-    <button class="btn-conn" id="btnConn">Connetti</button>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn-reboot" id="btnReboot" disabled title="Invia reg[44]=1 → riavvio scheda">⟳ RE-BOOT</button>
+      <button class="btn-conn" id="btnConn">Connetti</button>
+    </div>
   </div>
   <div class="topbar">
     <div class="group-ctl">
@@ -457,6 +475,7 @@ async function connect(){
     setStatus("on","Connesso · "+device.name);
     btnConn.textContent="Disconnetti"; btnConn.classList.add("disconnect");
     setControlsEnabled(true);
+    setTopbarEnabled(false);
     log("Connesso a "+device.name, "r");
   }catch(err){
     // Tipico: NotFoundError quando l'utente chiude il chooser o nessun
@@ -471,9 +490,17 @@ function onDisconnect(){
   connected=false; setStatus("","Disconnesso");
   btnConn.textContent="Connetti"; btnConn.classList.remove("disconnect");
   setControlsEnabled(false);
+  setTopbarEnabled(true);
   log("Disconnesso","e");
 }
 function setStatus(cls,txt){ dot.className="dot "+(cls||""); statusTxt.textContent=txt; }
+function setTopbarEnabled(on){
+  const th=$("#theme"), bi=$("#bleId");
+  if(th){ th.disabled=!on; th.style.opacity=on?"1":".45"; th.style.pointerEvents=on?"auto":"none"; }
+  if(bi){ bi.disabled=!on; bi.style.opacity=on?"1":".45"; bi.style.pointerEvents=on?"auto":"none"; }
+  // btnReboot: logica INVERSA — attivo quando connesso (on=false significa connesso)
+  const rb=$("#btnReboot"); if(rb) rb.disabled=on;
+}
 
 /* ---- ricezione notifica (88 byte) ---- */
 function onNotify(e){
@@ -610,7 +637,8 @@ function initRaw(){
 
 function setControlsEnabled(on){
   document.querySelectorAll("input,select,#segDir button,.tg").forEach(el=>{
-    if(el.id==="rawReg"||el.id==="rawVal") return; // raw input sempre editabile
+    // rawReg/rawVal sempre editabili; theme/bleId gestiti separatamente da setTopbarEnabled
+    if(el.id==="rawReg"||el.id==="rawVal"||el.id==="theme"||el.id==="bleId") return;
     el.style.pointerEvents = on?"auto":"none";
     el.style.opacity = on?"1":".5";
   });
@@ -645,6 +673,13 @@ function initTopbar(){
 /* ---- init ---- */
 initTopbar();
 btnConn.onclick=()=> connected ? disconnect() : connect();
+// RE-BOOT: scrive reg[44] = 1 → riavvio scheda
+$("#btnReboot").onclick=()=>{
+  if(!connected){ return; }
+  if(!confirm("Conferma RE-BOOT della scheda?\n\nViene scritto reg[44]=1: la scheda si riavvierà.")){return;}
+  writeReg(44, 1);
+  log("⟳ RE-BOOT inviato (reg[44]=1)", "e");
+};
 buildReadouts(); buildGroups(); initQuick(); initRaw();
 setControlsEnabled(false);
 if(!navigator.bluetooth) $("#unsupported").style.display="block";
