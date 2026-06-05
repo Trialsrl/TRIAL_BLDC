@@ -743,11 +743,11 @@ function initTopbar(){
   // BLE ID
   const inp = $("#bleId"), prev = $("#namePreview");
   inp.value = getInitialId();
-  prev.textContent = deviceName(inp.value);
+  if(prev) prev.textContent = deviceName(inp.value);
   function syncId(){
     const v = clampId(inp.value);
     inp.value = v;
-    prev.textContent = deviceName(v);
+    if(prev) prev.textContent = deviceName(v);
     lsSet("bleId", v);
   }
   inp.addEventListener("input", syncId);
