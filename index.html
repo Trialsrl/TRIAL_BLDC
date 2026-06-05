@@ -676,7 +676,6 @@ btnConn.onclick=()=> connected ? disconnect() : connect();
 // RE-BOOT: scrive reg[44] = 1 → riavvio scheda
 $("#btnReboot").onclick=()=>{
   if(!connected){ return; }
-  if(!confirm("Conferma RE-BOOT della scheda?\n\nViene scritto reg[44]=1: la scheda si riavvierà.")){return;}
   writeReg(44, 1);
   log("⟳ RE-BOOT inviato (reg[44]=1)", "e");
 };
