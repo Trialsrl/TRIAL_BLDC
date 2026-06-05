@@ -430,11 +430,13 @@ function lsSet(k, v){
 /* ---- BLE ID: precedenza URL ?id=N > localStorage > default 1 ---- */
 function clampId(v){ v = parseInt(v,10); if(!Number.isFinite(v)) v=1; return Math.min(255, Math.max(1, v)); }
 function getInitialId(){
-  // location.search funziona anche con file:///.../index.html?id=3
   const url = new URLSearchParams(location.search);
-  if(url.has("id")) return clampId(url.get("id"));
+  // cerca il parametro in qualsiasi forma (case-insensitive)
+  for(const [k,v] of url.entries()){
+    if(k.toLowerCase()==="id") return clampId(v);
+  }
   const ls = lsGet("bleId");
-  if(ls!=null)      return clampId(ls);
+  if(ls!=null) return clampId(ls);
   return 1;
 }
 function deviceName(id){ return DEV_PREFIX + "-" + clampId(id); }
