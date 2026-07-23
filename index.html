@@ -300,7 +300,7 @@
       <span class="rx-blink" id="rxBlink" title="Attività dati"></span>
     </div>
     <div class="hrow2-btns">
-      <button class="btn-reboot" id="btnReboot" disabled title="Invia reg[44]=1 → riavvio scheda">⟳ RE-BOOT</button>
+      <button class="btn-reboot" id="btnReboot" disabled title="Invia reg[47]=1 → riavvio scheda">⟳ RE-BOOT</button>
       <button class="btn-conn" id="btnConn">Connetti</button>
       <button class="btn-info" id="btnInfo" title="Istruzioni d'uso">i</button>
     </div>
@@ -343,7 +343,7 @@
           <li>I valori in <b>sola lettura</b> si aggiornano automaticamente ad ogni notifica BLE.</li>
           <li>Per i parametri <b>scrivibili</b> usa i controlli a destra di ogni registro.</li>
           <li>I valori scalati (V, °C…) mostrano il dato interpretato: in scrittura si inserisce il <b>valore intero del registro</b> (es. Vh 5.0V → 50).</li>
-          <li>Il pulsante <b>RE-BOOT</b> invia il comando al registro 44 con valore 1, provocando il riavvio della scheda.</li>
+          <li>Il pulsante <b>RE-BOOT</b> invia il comando al registro 47 con valore 1, provocando il riavvio della scheda.</li>
           <li>Tema e BLE ID sono modificabili solo <b>prima</b> della connessione.</li>
         </ul>
       </div>
@@ -406,14 +406,14 @@
 /* ============================================================
    PROTOCOLLO (deve combaciare col firmware ESP32-C6)
    - Servizio Nordic UART (NUS)
-   - TX (notify):  88 byte = 44 registri uint16 big-endian
+   - TX (notify):  96 byte = 48 registri uint16 big-endian
    - RX (write) :  4 byte = [reg_hi, reg_lo, val_hi, val_lo]
    ============================================================ */
 const SVC = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const TX  = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"; // notify -> app
 const RX  = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; // write  <- app
 const DEV_PREFIX = "BLDC-CTRL";
-const N_REGS = 44;
+const N_REGS = 48;
 
 /* ---- localStorage sicuro: su file:// alcuni browser lanciano SecurityError.
    Wrapper che fallisce silenziosamente: l'app funziona comunque, solo
@@ -482,7 +482,7 @@ const REGS = [
  {i:22,n:"AUX_Max",        acc:"RW", grp:"MOTOR", ee:1, ctl:"num", min:0, max:9999},
  {i:23,n:"OP Mode",        acc:"RW", grp:"SYS", ee:1, ctl:"enum", en:E_OPMODE},
  {i:24,n:"STOP MODE",      acc:"RW", grp:"SYS", ee:1, ctl:"enum", en:E_STOP},
- {i:25,n:"BLE",            acc:"RW", grp:"SYS", ee:1, ctl:"bool", en:E_BOOL},
+ {i:25,n:"BLE ID",         acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:255, en:{0:"OFF"}},
  {i:26,n:"MB Slave ID",    acc:"RW", grp:"SYS", ee:1, ctl:"num", min:1, max:247},
  {i:27,n:"MB Slave Baud",  acc:"RW", grp:"SYS", ee:1, ctl:"enum", en:E_BAUD},
  {i:28,n:"MB Slave Frame", acc:"RW", grp:"SYS", ee:1, ctl:"enum", en:E_FRAME},
@@ -491,22 +491,26 @@ const REGS = [
  {i:31,n:"MB Master Mode", acc:"RW", grp:"SYS", ee:1, ctl:"enum", en:E_MSTMODE},
  {i:32,n:"SM1 SlvID",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:247},
  {i:33,n:"SM1 SlREG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:65535},
- {i:34,n:"SM1 M_REG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:43},
+ {i:34,n:"SM1 M_REG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:47},
  {i:35,n:"SM2 SlvID",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:247},
  {i:36,n:"SM2 SlREG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:65535},
- {i:37,n:"SM2 M_REG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:43},
+ {i:37,n:"SM2 M_REG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:47},
  {i:38,n:"SM3 SlvID",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:247},
  {i:39,n:"SM3 SlREG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:65535},
- {i:40,n:"SM3 M_REG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:43},
+ {i:40,n:"SM3 M_REG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:47},
  {i:41,n:"SM4 SlvID",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:247},
  {i:42,n:"SM4 SlREG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:65535},
- {i:43,n:"SM4 M_REG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:43},
+ {i:43,n:"SM4 M_REG",      acc:"RW", grp:"SYS", ee:1, ctl:"num", min:0, max:47},
+ {i:44,n:"SENS_MS",         acc:"RW", grp:"SYS2", ee:1, ctl:"num", u:"ms", min:100, max:2000},
+ {i:45,n:"BLE_MS",          acc:"RW", grp:"SYS2", ee:1, ctl:"num", u:"ms", min:50,  max:2000},
+ {i:46,n:"SENS_FLT",        acc:"RW", grp:"SYS2", ee:1, ctl:"num", u:"smp", min:1,  max:32},
 ];
 const GROUPS = [
  {k:"OP",   t:"OPERATION", s:"comandi runtime"},
  {k:"DATA", t:"DATA (sola lettura)", s:"misure live"},
  {k:"MOTOR",t:"MOTOR SET", s:"EEPROM"},
  {k:"SYS",  t:"SYSTEM", s:"EEPROM"},
+ {k:"SYS2", t:"SYSTEM 2", s:"acquisizione e filtro · EEPROM"},
 ];
 // readout grandi (i piu' utili da tenere d'occhio)
 const READOUTS = [5,6,7,8,9];
@@ -588,7 +592,7 @@ function setTopbarEnabled(on){
   const rb=$("#btnReboot"); if(rb) rb.disabled=on;
 }
 
-/* ---- ricezione notifica (88 byte) ---- */
+/* ---- ricezione notifica (96 byte) ---- */
 function onNotify(e){
   const dv = e.target.value;
   const n = Math.min(N_REGS, Math.floor(dv.byteLength/2));
@@ -763,11 +767,11 @@ btnConn.onclick=()=> connected ? disconnect() : connect();
 $("#btnInfo").onclick=()=>$("#infoModal").classList.add("open");
 $("#modalClose").onclick=()=>$("#infoModal").classList.remove("open");
 $("#infoModal").onclick=(e)=>{ if(e.target===e.currentTarget) $("#infoModal").classList.remove("open"); };
-// RE-BOOT: scrive reg[44] = 1 → riavvio scheda
+// RE-BOOT: scrive reg[47] = 1 → riavvio scheda
 $("#btnReboot").onclick=()=>{
   if(!connected){ return; }
-  writeReg(44, 1);
-  log("⟳ RE-BOOT inviato (reg[44]=1)", "e");
+  writeReg(47, 1);
+  log("⟳ RE-BOOT inviato (reg[47]=1)", "e");
 };
 buildReadouts(); buildGroups(); initQuick(); initRaw();
 setControlsEnabled(false);
